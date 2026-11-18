@@ -1,0 +1,304 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UC117 – Feature Flag & Configuration Management Console</title><style>body{font-family:'Segoe UI',Arial,sans-serif;color:#222;max-width:900px;margin:32px auto;padding:0 20px;line-height:1.55;background:#fff}
+h1{color:#0D8390;border-bottom:3px solid #0D8390;padding-bottom:8px;font-size:26px}
+h2{color:#0D8390;margin-top:34px;font-size:21px;border-bottom:1px solid #cfe5e8;padding-bottom:4px}
+h3{color:#0b6a74;margin-top:24px;font-size:17px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+th,td{border:1px solid #cfd8dc;padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#e6f3f5;color:#0b4f57}tr:nth-child(even) td{background:#fafcfc}
+code{background:#f1f4f5;padding:1px 5px;border-radius:3px;font-size:13px}
+hr{border:0;border-top:1px solid #ddd;margin:26px 0}li{margin:3px 0}
+@media print{body{max-width:none;margin:12px}h2{page-break-after:avoid}table{page-break-inside:avoid}}</style></head><body><h1>UC117 – Feature Flag &amp; Configuration Management Console</h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Domain</strong></td>
+<td>Enterprise Platform / DevOps Tooling</td>
+</tr>
+<tr>
+<td><strong>Pattern</strong></td>
+<td>CRUD + approval workflow + deterministic rule evaluation + RBAC (No AI)</td>
+</tr>
+<tr>
+<td><strong>Duration</strong></td>
+<td>3–4 hours (timed assessment)</td>
+</tr>
+<tr>
+<td><strong>Stack</strong></td>
+<td>ASP.NET Core Minimal API, EF Core, ASP.NET Core Identity with JWT, Angular or React with TypeScript (candidate's choice), Azure SQL Database, Azure App Service</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Part 1 – Use Case Description</h2>
+<h3>1.1 Business Context</h3>
+<p>Teams ship code continuously and want to release features gradually, turn them off quickly when something breaks, and change configuration without redeploying. Flags kept in code or config files are hard to audit, hard to roll back and easy to change without review. A central console gives control, safety and history.</p>
+<h3>1.2 Problem Statement</h3>
+<p>Build a feature-flag and configuration service with an admin console. Flags have per-environment values and targeting rules, including percentage rollout and attribute-based rules. Changes need approval, are versioned with author and reason, and can be rolled back in one click. A client endpoint evaluates flags quickly and supports caching. This application contains no AI features.</p>
+<h3>1.3 Target Users</h3>
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>What they need</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Developer</td>
+<td>Create flags and propose changes to values and rules</td>
+</tr>
+<tr>
+<td>Approver</td>
+<td>Review and approve or reject proposed changes before they go live</td>
+</tr>
+<tr>
+<td>Admin</td>
+<td>Manage environments, API keys and users, and perform rollbacks</td>
+</tr>
+<tr>
+<td>Client application</td>
+<td>A fast, authenticated endpoint to fetch or evaluate flags</td>
+</tr>
+</tbody>
+</table>
+<h3>1.4 Core Capabilities</h3>
+<ol>
+<li><strong>Flag management.</strong> Create, edit and archive flags with a key, description and type (boolean, string or number).</li>
+<li><strong>Environments.</strong> Each flag has its own value and on/off state per environment (for example dev, test, prod).</li>
+<li><strong>Targeting rules.</strong> Percentage rollout using stable hashing, and attribute rules (for example country equals X, plan in a list), evaluated in order.</li>
+<li><strong>Approval workflow.</strong> Changes to protected environments are submitted, reviewed and approved before they take effect.</li>
+<li><strong>History and rollback.</strong> Every change is a new version with author and reason, and any earlier version can be restored in one click.</li>
+<li><strong>Evaluation endpoint.</strong> A client sends a user context and receives the flag result, or fetches a full config snapshot.</li>
+<li><strong>Caching.</strong> The snapshot endpoint returns an ETag so clients can poll efficiently and receive 304 when nothing changed.</li>
+</ol>
+<h3>1.5 Technology Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API</td>
+<td>ASP.NET Core Minimal API with EF Core</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>ASP.NET Core Identity with JWT (developer, approver, admin roles); API key per environment for evaluation</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Angular or React with TypeScript (candidate's choice)</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>Azure SQL Database (flags, rules, change history)</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Azure App Service</td>
+</tr>
+</tbody>
+</table>
+<h3>1.6 Non-Functional Requirements</h3>
+<table>
+<thead>
+<tr>
+<th>NFR</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Performance</td>
+<td>Flag evaluation responds in under 50 ms</td>
+</tr>
+<tr>
+<td>Determinism</td>
+<td>The same user always gets the same percentage-rollout result</td>
+</tr>
+<tr>
+<td>Traceability</td>
+<td>Every change is versioned with author and reason</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>The evaluation endpoint is authenticated by an API key per environment</td>
+</tr>
+</tbody>
+</table>
+<h3>1.7 Expected Outcomes</h3>
+<ul>
+<li>Flags are managed per environment.</li>
+<li>Percentage and attribute targeting works.</li>
+<li>Change history exists, with rollback.</li>
+<li>The evaluation endpoint is cached and efficient to poll.</li>
+</ul>
+<hr />
+<h2>Part 2 – What Is Expected from the Developer / Candidate</h2>
+<h3>2.1 What You Must Build</h3>
+<p>Deliver a working application, not slides or a design document only. AI and LLM features are out of scope. At minimum:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Deliverable</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Data model and EF Core migrations: flags, environments, per-environment values, rules, versions, API keys</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Flag CRUD API with validation and unique flag keys</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>3</td>
+<td>JWT login with developer, approver and admin roles, enforced on the server</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Admin console: flag list, environment toggles and rule editor</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Evaluation endpoint with API key per environment and rule evaluation in order</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Percentage rollout using stable hashing of flag key plus user id</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Attribute rules with at least equals, in-list and not-equals operators</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Versioned change history with author and reason, and one-click rollback</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Approval workflow: developers cannot approve their own change</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Snapshot endpoint with ETag and 304 support</td>
+<td>Should</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Automated tests: service tests for rollout and rule evaluation, and at least one API test</td>
+<td>Must</td>
+</tr>
+<tr>
+<td>12</td>
+<td>A short README: how to run, design choices, known limitations</td>
+<td>Must</td>
+</tr>
+</tbody>
+</table>
+<p>"Must" items carry the main weight. "Should" items separate a strong submission from a passing one.</p>
+<ul>
+<li><strong>Frontend choice.</strong> Choose either Angular or React (with TypeScript) and state your choice in the README.</li>
+</ul>
+<h3>2.2 Engineering Expectations</h3>
+<ul>
+<li><strong>Data model.</strong> Use EF Core migrations. Keep flag definition, environment state and version history in separate tables, with clear keys and indexes on flag key and environment.</li>
+<li><strong>Concurrency control.</strong> Use a row version token so two people editing the same flag cannot silently overwrite each other. Return 409 on conflict and show it in the UI.</li>
+<li><strong>Transactions.</strong> A change, its new version row and its approval status must be saved together.</li>
+<li><strong>Authentication and authorization.</strong> Enforce roles in the API. Developers propose, approvers approve, admins manage keys and roll back. The approver must not be the author. Evaluation uses an API key, not a user JWT. Store only hashed API keys.</li>
+<li><strong>Input validation.</strong> Validate flag keys, rollout percentages (0 to 100), rule operators and value types.</li>
+<li><strong>Stable hashing.</strong> Use a deterministic hash (not <code>string.GetHashCode</code>, which varies between processes) so the same user gets the same bucket on every instance.</li>
+<li><strong>API design.</strong> Use REST status codes, DTOs, paged flag lists, and ETag with If-None-Match on the snapshot.</li>
+<li><strong>Frontend state.</strong> Keep flags, filters and pending changes in a central state store (NgRx in Angular, or Redux Toolkit in React). Show loading, empty and error states, and confirm before rollback.</li>
+<li><strong>Error handling.</strong> Return a consistent error shape. An evaluation request for an unknown flag returns a defined default, not an unhandled exception.</li>
+<li><strong>Configuration and secrets.</strong> Use environment variables or user secrets. Do not commit keys.</li>
+<li><strong>Code quality.</strong> Separate endpoints, services and data access, and add the tests listed above.</li>
+</ul>
+<h3>2.3 Data and Inputs</h3>
+<p>Seed sample data yourself: a few environments, about ten flags of different types, and a mix of rules (a 20 percent rollout, a country rule, a plan rule). Use fake user ids and attributes for evaluation. Do not use real personal data.</p>
+<h3>2.4 What to Demonstrate at the End</h3>
+<p>Prepare a short walkthrough of about 10 minutes covering:
+1. Creating a flag and toggling it per environment.
+2. Adding a percentage rollout and an attribute rule.
+3. Evaluating several user ids to show stable, repeatable results.
+4. Proposing a change, approving it as a different user, and seeing it go live.
+5. Viewing history and rolling back a version.
+6. The ETag behaviour (200 then 304) and a rejected request with a wrong API key.</p>
+<h3>2.5 How Your Work Will Be Evaluated</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What the panel looks for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Functional completeness</td>
+<td>Flags, rules, approval, history, rollback and evaluation work end to end</td>
+</tr>
+<tr>
+<td>Data model and business rules</td>
+<td>Correct versioning, stable rollout, correct rule order, conflict handling</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Server-side role checks, no self-approval, hashed API keys, no hardcoded secrets</td>
+</tr>
+<tr>
+<td>API and code quality</td>
+<td>Clean layering, DTOs, status codes, ETag, tests present</td>
+</tr>
+<tr>
+<td>Frontend UX</td>
+<td>Clear toggles, usable rule editor, visible conflict and error states</td>
+</tr>
+<tr>
+<td>NFR adherence</td>
+<td>Evaluation under 50 ms, deterministic results, versioned changes</td>
+</tr>
+<tr>
+<td>Communication</td>
+<td>Clear demo, honest limits, reasonable trade-off decisions</td>
+</tr>
+</tbody>
+</table>
+<h3>2.6 Out of Scope</h3>
+<ul>
+<li>Any AI or LLM features, including automated rollout recommendations</li>
+<li>SSO tenant setup or external identity providers</li>
+<li>Real email or chat notification providers; use stubs</li>
+<li>Client SDK packages for multiple languages (a documented HTTP endpoint is enough)</li>
+<li>Experimentation or statistical analysis of rollouts</li>
+</ul>
+<h3>2.7 Common Pitfalls</h3>
+<ul>
+<li>Using <code>string.GetHashCode</code> for bucketing, so users change buckets after a restart or on another instance.</li>
+<li>Last write wins with no concurrency check on flag edits.</li>
+<li>Hiding the approve button in the UI while the approve endpoint accepts anyone.</li>
+<li>Letting an author approve their own change.</li>
+<li>Storing API keys in plain text.</li>
+<li>Rollback that edits history instead of creating a new version.</li>
+<li>Evaluating rules in an undefined order, or querying the database several times per evaluation and missing the 50 ms target.</li>
+</ul></body></html>

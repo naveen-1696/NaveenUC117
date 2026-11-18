@@ -1,0 +1,30 @@
+# .NET build output
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+.DS_Store
+
+# Secrets / local config
+appsettings.Local.json
+
+# Prompt exporter
+prompexporter/
+Prompts/
+/UC117_New.pdf
+/UC117_New.pptx
+/PromptExporter
