@@ -24,7 +24,5 @@ appsettings.Local.json
 
 # Prompt exporter
 prompexporter/
-Prompts/
 /UC117_New.pdf
 /UC117_New.pptx
-/PromptExporter
